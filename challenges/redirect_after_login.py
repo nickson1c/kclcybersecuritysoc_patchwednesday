@@ -22,9 +22,16 @@ import urllib
 
 def safe_target(next_value):
     """Return a safe URL to redirect to. THIS IS THE VULNERABLE PART."""
-    if not urllib.parse.urlparse(next_value).netloct_value == "" and not next_value.startswith("//"):
+    if (
+            urllib.urlparse(next_value).netloc == ""
+            and  urllib.urlparse(next_value).scheme == ""
+            and next_value.startswith("/")
+            and not next_value.startswith("//")
+            and "\\" not in next_value
+    ):
         return next_value
 
+    return "/"
 
 def handle(request):
     return redirect(safe_target(request.args.get("next", "")))
