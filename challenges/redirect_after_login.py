@@ -17,14 +17,29 @@ HINT: urllib.parse.urlparse(next).netloc must be empty AND the value must start
 with a single "/" (reject "//..."). Then it's same-site.
 """
 from flask import redirect
+import urllib
+
+from urllib.parse import urlparse, urljoin
+from flask import request
 
 
-def safe_target(next_value):
-    """Return a safe URL to redirect to. THIS IS THE VULNERABLE PART."""
-    if not next_value:
+def safe_target(target):
+    """Ensures target is a safe relative path residing on the same host."""
+    if not target:
         return "/"
-    return next_value
 
+    # Block backslashes to prevent browser scheme/host confusion
+    if "\\" in target:
+        return "/"
+
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+
+    # Verify scheme and netloc strictly match the application host
+    if test_url.scheme in ('http', 'https') and ref_url.netloc == test_url.netloc:
+        return target
+
+    return "/"
 
 def handle(request):
     return redirect(safe_target(request.args.get("next", "")))
