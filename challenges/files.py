@@ -32,8 +32,15 @@ def index():
 
 def download(request):
     name = request.args.get("name", "")
-    # THIS IS THE VULNERABLE PART: `name` is trusted and joined straight on.
-    path = os.path.join(PUBLIC_DIR, name)
+
+    # 1. Combine and resolve the target path to expand any '..' traversal segments
+    target_path = (PUBLIC_DIR / name).resolve()
+
+    # 2. Verify the resolved path is inside PUBLIC_DIR
+    if not target_path.is_relative_to(PUBLIC_DIR):
+        raise ValueError("Access denied: path traversal attempt")
+    path = target_path
+    
     try:
         with open(path, "rb") as f:
             body = f.read()
