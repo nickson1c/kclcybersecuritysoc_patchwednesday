@@ -40,7 +40,10 @@ def check_login(username, password):
             "SELECT username FROM users "
             f"WHERE username = '{username}' AND password = '{password}'"
         )
-        row = con.execute(query).fetchone()
+        row = con.execute(
+            "SELECT username, password_hash FROM users WHERE username = ?",
+            (username,),
+        ).fetchone()
         return row[0] if row else None
     except sqlite3.Error:
         # never 500 on a malformed query -- treat it as a failed login
