@@ -36,13 +36,9 @@ def check_login(username, password):
     """Return the matching username, or None. THIS IS THE VULNERABLE PART."""
     con = _fresh_db()
     try:
-        query = (
-            "SELECT username FROM users "
-            f"WHERE username = '{username}' AND password = '{password}'"
-        )
         row = con.execute(
-            "SELECT username, password_hash FROM users WHERE username = ?",
-            (username,),
+            "SELECT username FROM users WHERE username = ? AND password = ?",
+            (username, password),
         ).fetchone()
         return row[0] if row else None
     except sqlite3.Error:
